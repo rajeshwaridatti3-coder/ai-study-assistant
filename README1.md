@@ -1,5 +1,8 @@
 # 📚 AI Smart Study Assistant
 
+## 🌐 Live Demo
+https://ai-study-assistant-rajeshwari.netlify.app
+
 A web-based smart study assistant designed to help students manage tasks, track progress, and get instant help using an AI-style chatbot.
 
 ## 🚀 Features
