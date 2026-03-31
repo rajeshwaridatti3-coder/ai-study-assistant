@@ -73,8 +73,10 @@ function startTimer() {
     interval = setInterval(() => {
         if (time <= 0) {
             clearInterval(interval);
+            interval = null;
             addMessage("bot", "⏰ Time's up!");
         }
+
         time--;
         let m = Math.floor(time / 60);
         let s = time % 60;
@@ -105,46 +107,15 @@ function addMessage(type, text) {
 
     let msg = document.createElement("div");
     msg.className = `message ${type}`;
+
     msg.innerText = text;
 
     chatBox.appendChild(msg);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// typing animation
-function typeEffect(text, element) {
-    let i = 0;
-    let interval = setInterval(() => {
-        element.innerText += text[i];
-        i++;
-        if (i >= text.length) clearInterval(interval);
-    }, 15);
-}
-
-// smart AI
-function getAIResponse(input) {
-    input = input.toLowerCase();
-
-    if (input.includes("food") || input.includes("diet"))
-        return "Eat balanced meals: fruits, vegetables, proteins, and drink plenty of water.";
-
-    if (input.includes("study"))
-        return "Use Pomodoro technique and revise regularly.";
-
-    if (input.includes("java"))
-        return "Java is an object-oriented language used for building applications.";
-
-    if (input.includes("motivate"))
-        return "Stay consistent 💪 Small efforts daily = big success.";
-
-    if (input.startsWith("what") || input.startsWith("explain"))
-        return "That's an important concept. Learn basics, see examples, and practice.";
-
-    return "That's interesting! Try asking more specifically 😊";
-}
-
-// main chat
-function askAI() {
+// ===== AI CHAT =====
+async function askAI() {
     let input = document.getElementById("userInput");
     let text = input.value;
 
@@ -157,15 +128,61 @@ function askAI() {
     botMsg.className = "message bot";
     document.getElementById("chatBox").appendChild(botMsg);
 
-    let res = getAIResponse(text);
-    typeEffect(res, botMsg);
+    try {
+        let response = await fetch("http://127.0.0.1:5000/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: text })
+        });
+
+        let data = await response.json();
+
+        typeEffect(data.reply, botMsg);
+
+    } catch (error) {
+        typeEffect("Error connecting to AI backend", botMsg);
+    }
 }
 
-// suggestion buttons
+// ===== QUICK ASK =====
 function quickAsk(text) {
     document.getElementById("userInput").value = text;
     askAI();
 }
 
-// INIT
+// ===== FINAL CLEAN TYPE EFFECT (BULLETS + NO STARS) =====
+function typeEffect(text, element) {
+    element.innerHTML = "";
+    let i = 0;
+
+    // Convert markdown → clean UI format
+    text = text
+        .replace(/\n\*/g, "\n• ")
+        .replace(/^\*/g, "• ")
+        .replace(/\*/g, "")
+        .replace(/ +/g, " ");
+
+    let interval = setInterval(() => {
+        let char = text[i];
+
+        if (char === "\n") {
+            element.innerHTML += "<br>";
+        } else if (char === " ") {
+            element.innerHTML += "&nbsp;";
+        } else {
+            element.innerHTML += char;
+        }
+
+        i++;
+
+        if (i >= text.length) {
+            clearInterval(interval);
+        }
+    }, 10);
+}
+
+// ===== INIT =====
 showTasks();
+
