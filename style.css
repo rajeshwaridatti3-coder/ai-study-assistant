@@ -105,3 +105,8 @@ li {
 .dark #chatBox {
     background: #1e1e1e;
 }
+
+.message {
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
