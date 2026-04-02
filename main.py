@@ -4,17 +4,17 @@ import os
 import google.generativeai as genai
 
 app = Flask(__name__)
-
-# ✅ CORS FIX (safe for frontend + Render)
 CORS(app)
 
-# ✅ Gemini API setup
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# ✅ FIX: stable config
+genai.configure(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    transport="rest"
+)
 
-# ✅ FIXED MODEL (most stable)
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
+# ✅ FIXED MODEL (stable)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-# 🧠 Chat memory
 chat_history = []
 
 @app.route("/chat", methods=["POST"])
@@ -23,39 +23,27 @@ def chat():
 
     try:
         data = request.get_json()
-
-        if not data:
-            return jsonify({"reply": "Invalid request"}), 400
-
         user_message = data.get("message", "")
 
         if not user_message.strip():
-            return jsonify({"reply": "Please enter a message"}), 400
+            return jsonify({"reply": "Please enter a message"})
 
-        # Store user message
         chat_history.append(f"User: {user_message}")
-
-        # Keep last 10 messages only
         context = "\n".join(chat_history[-10:])
 
         prompt = f"""
 You are an AI Study Assistant.
+Keep answers short and simple.
 
-Rules:
-- Give short and simple answers
-- Use bullet points if needed
-- Avoid long paragraphs
-
-Chat History:
+Chat:
 {context}
 
-User:
-{user_message}
+User: {user_message}
 """
 
         response = model.generate_content(prompt)
 
-        reply = response.text if response and response.text else "No response from AI"
+        reply = response.text if response else "No response"
 
         chat_history.append(f"AI: {reply}")
 
@@ -63,10 +51,9 @@ User:
 
     except Exception as e:
         print("ERROR:", str(e))
-        return jsonify({"reply": f"Server Error: {str(e)}"}), 500
+        return jsonify({"reply": f"Error: {str(e)}"}), 500
 
 
-# ✅ Render PORT FIX (VERY IMPORTANT)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
