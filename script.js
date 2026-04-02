@@ -1,4 +1,4 @@
-let BACKEND_URL = "https://ai-study-assistant-2-8nwh.onrender.com";
+let BACKEND_URL = "https://ai-study-assistant-3.onrender.com";
 
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
