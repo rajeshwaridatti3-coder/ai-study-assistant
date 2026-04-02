@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
 from google import genai
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["*"])  # allow all origins
 
-# 🔑 Your Gemini API Key
-client = genai.Client(api_key="AIzaSyDgcG9Z5AaZanej5cUlmfdiH3BrNhOjw2I")
+# 🔐 Secure API key from environment variable
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 # 🧠 Memory storage
 chat_history = []
@@ -22,12 +23,12 @@ def chat():
         # store user message
         chat_history.append({"role": "user", "text": user_message})
 
-        # keep last 10 messages only
+        # keep last 10 messages
         context = "\n".join(
             [f"{c['role']}: {c['text']}" for c in chat_history[-10:]]
         )
 
-        # 🧠 system prompt (controls AI behavior)
+        # system prompt
         prompt = f"""
 You are an AI Study Assistant.
 
@@ -51,7 +52,7 @@ User Question:
 
         reply = response.text.strip()
 
-        # store bot response
+        # store bot reply
         chat_history.append({"role": "assistant", "text": reply})
 
         return jsonify({"reply": reply})
@@ -59,5 +60,7 @@ User Question:
     except Exception as e:
         return jsonify({"reply": f"Error: {str(e)}"})
 
+
+# ✅ IMPORTANT for Render
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
