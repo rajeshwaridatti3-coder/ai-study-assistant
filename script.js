@@ -1,3 +1,5 @@
+let BACKEND_URL = "https://ai-study-assistant-2-8nwh.onrender.com";
+
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
 // ===== TASKS =====
@@ -65,7 +67,8 @@ function updateProgress(done) {
 }
 
 // ===== TIMER =====
-let time = 1500, interval;
+let time = 1500;
+let interval;
 
 function startTimer() {
     if (interval) return;
@@ -78,8 +81,10 @@ function startTimer() {
         }
 
         time--;
+
         let m = Math.floor(time / 60);
         let s = time % 60;
+
         document.getElementById("timer").innerText =
             `${m}:${s < 10 ? "0" : ""}${s}`;
     }, 1000);
@@ -102,7 +107,7 @@ function toggleDarkMode() {
     document.body.classList.toggle("dark");
 }
 
-// ===== CHAT UI =====
+// ===== CHAT =====
 function addMessage(type, text) {
     let chatBox = document.getElementById("chatBox");
 
@@ -114,7 +119,7 @@ function addMessage(type, text) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// ===== AI CHAT =====
+// ===== AI CHAT (FIXED FETCH) =====
 async function askAI() {
     let input = document.getElementById("userInput");
     let text = input.value;
@@ -130,8 +135,7 @@ async function askAI() {
     document.getElementById("chatBox").appendChild(botMsg);
 
     try {
-        // 🔥 IMPORTANT: Replace with your Render backend URL
-        let response = await fetch("https://ai-study-assistant-1-nebx.onrender.com", {
+        let response = await fetch(`${BACKEND_URL}/chat`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -140,11 +144,10 @@ async function askAI() {
         });
 
         let data = await response.json();
-
         typeEffect(data.reply, botMsg);
 
     } catch (error) {
-        typeEffect("❌ Error connecting to AI backend", botMsg);
+        typeEffect("❌ Backend not connected. Check deployment/CORS", botMsg);
     }
 }
 
@@ -159,31 +162,22 @@ function typeEffect(text, element) {
     element.innerHTML = "";
     let i = 0;
 
-    text = text
-        .replace(/\n\*/g, "\n• ")
-        .replace(/^\*/g, "• ")
-        .replace(/\*/g, "")
-        .replace(/ +/g, " ");
-
     let interval = setInterval(() => {
-        let char = text[i];
-
-        if (char === "\n") {
-            element.innerHTML += "<br>";
-        } else if (char === " ") {
-            element.innerHTML += "&nbsp;";
-        } else {
-            element.innerHTML += char;
-        }
-
-        i++;
-
         if (i >= text.length) {
             clearInterval(interval);
+            return;
         }
+
+        let char = text[i];
+
+        if (char === "\n") element.innerHTML += "<br>";
+        else if (char === " ") element.innerHTML += "&nbsp;";
+        else element.innerHTML += char;
+
+        i++;
     }, 10);
 }
 
-// ===== INIT =====
+// INIT
 showTasks();
 
