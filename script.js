@@ -131,7 +131,7 @@ async function askAI() {
 
     try {
         // 🔥 IMPORTANT: Replace with your Render backend URL
-        let response = await fetch("https://ai-study-assistant-s2iv.onrender.com", {
+        let response = await fetch("https://ai-study-assistant-1-nebx.onrender.com", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
