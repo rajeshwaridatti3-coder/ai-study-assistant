@@ -80,7 +80,8 @@ function startTimer() {
         time--;
         let m = Math.floor(time / 60);
         let s = time % 60;
-        document.getElementById("timer").innerText = `${m}:${s < 10 ? "0" : ""}${s}`;
+        document.getElementById("timer").innerText =
+            `${m}:${s < 10 ? "0" : ""}${s}`;
     }, 1000);
 }
 
@@ -101,13 +102,12 @@ function toggleDarkMode() {
     document.body.classList.toggle("dark");
 }
 
-// ===== CHAT =====
+// ===== CHAT UI =====
 function addMessage(type, text) {
     let chatBox = document.getElementById("chatBox");
 
     let msg = document.createElement("div");
     msg.className = `message ${type}`;
-
     msg.innerText = text;
 
     chatBox.appendChild(msg);
@@ -126,10 +126,12 @@ async function askAI() {
 
     let botMsg = document.createElement("div");
     botMsg.className = "message bot";
+    botMsg.innerText = "Typing...";
     document.getElementById("chatBox").appendChild(botMsg);
 
     try {
-        let response = await fetch("http://127.0.0.1:5000/chat", {
+        // 🔥 IMPORTANT: Replace with your Render backend URL
+        let response = await fetch("https://ai-study-assistant-s2iv.onrender.com", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -142,7 +144,7 @@ async function askAI() {
         typeEffect(data.reply, botMsg);
 
     } catch (error) {
-        typeEffect("Error connecting to AI backend", botMsg);
+        typeEffect("❌ Error connecting to AI backend", botMsg);
     }
 }
 
@@ -152,12 +154,11 @@ function quickAsk(text) {
     askAI();
 }
 
-// ===== FINAL CLEAN TYPE EFFECT (BULLETS + NO STARS) =====
+// ===== TYPE EFFECT =====
 function typeEffect(text, element) {
     element.innerHTML = "";
     let i = 0;
 
-    // Convert markdown → clean UI format
     text = text
         .replace(/\n\*/g, "\n• ")
         .replace(/^\*/g, "• ")
