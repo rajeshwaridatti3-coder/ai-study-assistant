@@ -1,66 +1,52 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-from google import genai
+import google.generativeai as genai
 
 app = Flask(__name__)
-CORS(app, origins=["*"])  # allow all origins
+CORS(app)
 
-# 🔐 Secure API key from environment variable
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# ✅ Configure API
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# 🧠 Memory storage
+model = genai.GenerativeModel("gemini-1.5-flash")
+
 chat_history = []
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    try:
-        global chat_history
+    global chat_history
 
+    try:
         data = request.get_json()
         user_message = data.get("message", "")
 
-        # store user message
-        chat_history.append({"role": "user", "text": user_message})
+        chat_history.append(f"User: {user_message}")
 
-        # keep last 10 messages
-        context = "\n".join(
-            [f"{c['role']}: {c['text']}" for c in chat_history[-10:]]
-        )
+        context = "\n".join(chat_history[-10:])
 
-        # system prompt
         prompt = f"""
 You are an AI Study Assistant.
 
-RULES:
-- Give short and simple answers
-- Use bullet points when needed
-- Avoid long theory unless asked
-- Keep answers clean and readable
+Give short and clear answers.
 
-Chat History:
+Chat:
 {context}
 
-User Question:
+User:
 {user_message}
 """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+        response = model.generate_content(prompt)
 
-        reply = response.text.strip()
+        reply = response.text if response.text else "No response"
 
-        # store bot reply
-        chat_history.append({"role": "assistant", "text": reply})
+        chat_history.append(f"AI: {reply}")
 
         return jsonify({"reply": reply})
 
     except Exception as e:
         return jsonify({"reply": f"Error: {str(e)}"})
 
-
-# ✅ IMPORTANT for Render
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
